@@ -1,0 +1,278 @@
+<html>
+<head>
+	<title>1942 Game</title>
+
+<style type="text/css">
+	body{
+		background-color:black;
+	}
+	#container{
+		background: url('background.jpg');
+		width:1000px;
+		height:550px;
+	}
+	#hero{
+		background: url('1942.gif');
+		background-position: -85px -180px;
+		width:28px;
+		height:28px;
+		position:absolute;
+	}
+	.enemy1{
+		background: url('1942.gif');
+		background-position: -30px -10px;
+		width:28px;
+		height:28px;
+		position:absolute;
+	}
+	.enemy2{
+		background: url('1942.gif');
+		background-position: -124px -14px;
+		width:23px;
+		height:13px;
+		position: absolute;
+	}
+	.enemy3{
+		background: url('1942.gif');
+		background-position: -155px -12px;
+		width:23px;
+		height:15px;
+		position: absolute;
+	}
+	.enemy4{
+		background: url('1942.gif');
+		background-position: -185px -20px;
+		width:21px;
+		height:7px;
+		position: absolute;
+	}
+	.enemy5{
+		background: url('1942.gif');
+		background-position: -97px -21px;
+		width:21px;
+		height:6px;
+		position: absolute;
+	}
+	.enemy6{
+		background: url('1942.gif');
+		background-position: -13px -18px;
+		width:15px;
+		height:8px;
+		position: absolute;
+	}
+	.enemy7{
+		background: url('1942.gif');
+		background-position: -66px -15px;
+		width:23px;
+		height:12px;
+		position: absolute;
+	}
+	.bullet{
+		background: url('1942.gif');
+		background-position: -185px -400px;
+		width:18px;
+		height:18px;
+		position:absolute;
+	}
+	.explode1{
+		background: url('1942.gif');
+		background-position: -88 -42px;
+		width:16px;
+		height:16px;
+		position:absolute;
+	}
+	.explode2{
+		background: url('1942.gif');
+		background-position: -114px -34px;
+		width:24px;
+		height:24px;
+		position:absolute;
+	}
+	#score{
+		position:absolute;
+		border:10px solid red;
+		top:20px;
+		left:800px;
+		background-color:white;
+		padding:10px;
+		font-size:30px;
+		font-family: Arial;	
+	}
+</style>
+</head>
+<body>
+	<div id='container'>
+		<div id='hero'></div>
+		<div id='enemies'></div>
+		<div id='bullets'></div>
+		<div id='explosions'></div>	
+	</div>
+
+	<div id='score'>0</div>
+
+	<audio id='sound'>
+		<source src="explosion.wav" type="audio/wav">
+	</audio>
+
+<script>
+
+	var score = 0;
+
+	var hero = {
+		x: 300,
+		y: 500
+	};
+
+	var audio = document.getElementById("sound"); 
+
+	var explosions = [];
+
+	var enemies = [
+		enemy1 = {x: 50, y: 50}, 
+		enemy2 = {x: 250, y: 50},
+		enemy3 = {x: 350, y: 50},
+		enemy4 = {x: 430, y: 50},
+		enemy5 = {x: 550, y: 50},
+		enemy6 = {x: 650, y: 50},
+		enemy7 = {x: 750, y: 50}
+	];
+
+	var bullets = [];
+
+	function displayHero(){
+		document.getElementById('hero').style['top'] = hero.y + 'px';
+		document.getElementById('hero').style['left'] = hero.x + 'px';
+	}
+
+	function displayEnemies(){
+		var output = '';
+		for(var i=0; i<enemies.length; i++){
+			output += "<div class='enemy1' style='top:"+enemies[0].y+"; left:"+enemies[0].x+";'></div>";
+			output += "<div class='enemy2' style='top:"+enemies[1].y+"; left:"+enemies[1].x+";'></div>";
+			output += "<div class='enemy3' style='top:"+enemies[2].y+"; left:"+enemies[2].x+";'></div>";
+			output += "<div class='enemy4' style='top:"+enemies[3].y+"; left:"+enemies[3].x+";'></div>";
+			output += "<div class='enemy5' style='top:"+enemies[4].y+"; left:"+enemies[4].x+";'></div>";
+			output += "<div class='enemy6' style='top:"+enemies[5].y+"; left:"+enemies[5].x+";'></div>";
+			output += "<div class='enemy7' style='top:"+enemies[6].y+"; left:"+enemies[6].x+";'></div>";
+		}
+		document.getElementById('enemies').innerHTML = output;
+	}
+
+	function moveEnemies(){
+		for(var i=0; i<enemies.length; i++){
+			enemies[i].y += 5;
+
+			if(enemies[i].y > 540){
+				enemies[i].y = 0;
+				enemies[i].x = Math.random()*700;
+			}
+		}
+	}
+
+	function moveBullets(){
+		for(var i=0; i<bullets.length; i++){
+			bullets[i].y -= 5;
+
+			if(bullets[i].y < 0){
+				bullets[i] = bullets[bullets.length-1];
+				bullets.pop();
+			}
+		}
+	}
+
+	function displayBullets(){
+		var output = '';
+		for(var i=0; i<bullets.length; i++){
+			output += "<div class='bullet' style='top:"+bullets[i].y+"; left:"+bullets[i].x+";'></div>";
+		}
+		document.getElementById('bullets').innerHTML = output;
+	}
+
+	function displayScore(){
+		document.getElementById('score').innerHTML = score;
+	}
+
+	function gameLoop(){
+		displayEnemies();
+		displayHero();
+		moveEnemies();
+		moveBullets();
+		displayBullets();
+		detectCollision();
+		planeCollision();
+		displayScore();
+	}
+
+	function detectCollision(){
+		for(var i=0; i<bullets.length; i++){
+			for(var j=0; j<enemies.length; j++){
+				if(Math.abs(bullets[i].x - enemies[j].x) < 10 && Math.abs(bullets[i].y - enemies[j].y) < 10){
+					score += 10;
+					audio.play();
+
+					if(explosions.push({x: enemies[j].x+6, y: enemies[j].y-15})){
+						displayExplosion();
+						enemies[j] = enemies[enemies.length-1];
+					}
+				}
+			}
+		}
+	}
+
+	setInterval(function(){
+		if(displayExplosion() == true){
+			removeExplosion();
+		}
+	}, 200)
+
+	function displayExplosion(){
+		var output = '';
+
+		for(var i=0; i<explosions.length; i++){
+			output += "<div class='explode1' style='top:"+explosions[i].y+"; left:"+explosions[i].x+";'></div>";
+		}
+		document.getElementById('explosions').innerHTML = output;
+		return true;
+	}
+
+	function removeExplosion(){
+		var output = '';
+
+			for(var i=0; i<explosions.length; i++){
+				output += "<div class='explode1' style='top:"+explosions[i].y+"; left:"+explosions[i].x+";'></div>";
+				explosions[i] = explosions[explosions.length-1];
+				explosions.pop();
+			}
+		document.getElementById('explosions').innerHTML = "";
+	}
+
+	function planeCollision(){
+
+		for(var i=0; i<enemies.length; i++){
+			
+			if((hero.x == enemies[i].x) && (hero.y == enemies[i].y)){
+				score -=500;
+			}
+		}
+	}
+
+	setInterval(gameLoop, 40);
+
+	document.onkeydown = function(a){
+		if(a.keyCode == 37){
+			hero.x -= 10;
+		} else if(a.keyCode == 39){
+			hero.x += 10;
+		} else if(a.keyCode == 38){
+			hero.y -= 10;
+		} else if(a.keyCode == 40){
+			hero.y += 10;
+		} else if(a.keyCode == 32){
+			bullets.push({x: hero.x+6, y: hero.y-15});
+			displayBullets();
+		}
+	}
+
+</script>
+</body>
+</html>
